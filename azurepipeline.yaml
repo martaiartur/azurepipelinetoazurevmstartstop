@@ -9,7 +9,8 @@ steps:
 #               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
 - task: AzureCLI@2
   inputs:
-    azureSubscription: "Azure subscription 1"
+    azureSubscription: ideArmoServiceConnection
+    # "Azure subscription 1"
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
