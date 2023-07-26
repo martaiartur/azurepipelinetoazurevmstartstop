@@ -20,8 +20,12 @@ steps:
       az vm start --name "ideArmoVM1" --resource-group "ideArmoResourceGroup"
       Write-Output "Status:"
       az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Where-Object name -EQ ideArmoVM1 | Select-Object -Property name,resourceGroup,powerState
+      Write-Output "PS Status:"
       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
-      Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
+      Write-Output "PS Stopping..."
+      Stop-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force -Verbose
+      #Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Verbose
+      Write-Output "PS Status:"
       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
 #   1B: failover: by az command
 # 2. stop (+deallocate) vm in Azure 
