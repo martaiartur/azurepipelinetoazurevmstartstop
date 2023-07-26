@@ -7,29 +7,48 @@ steps:
 #   1A: best: with Powershell because i like it
 #        powershell@azure pipeline still uses depreated AzureRM module instead of Az module, but commands should work similar way (tested at work)
 #               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
-- task: AzureCLI@2
+# - task: AzureCLI@2
+#   inputs:
+#     ConnectedServiceNameARM: ideArmoServiceConnection
+#     # "Azure subscription 1"
+#     scriptType: 'pscore'
+#     scriptLocation: 'inlineScript'
+#     inlineScript: |
+#       Write-Output "Status:"
+#       #   1B: failover: by az command
+#       az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Where-Object name -EQ ideArmoVM1 | Select-Object -Property name,resourceGroup,powerState
+#       Write-Output "Starting..."
+#       az vm start --name "ideArmoVM1" --resource-group "ideArmoResourceGroup"
+#       Write-Output "Status:"
+#       az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Where-Object name -EQ ideArmoVM1 | Select-Object -Property name,resourceGroup,powerState
+#       Write-Output "PS Status:"
+#       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+#       # 2. stop (+deallocate) vm in Azure 
+#       #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
+#       Write-Output "PS Stopping..."
+#       Stop-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force -Verbose
+#       #Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Verbose
+#       # 3. monitor status of power state of vm (before and after power state change)
+#       #               Get-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status
+#       #                     Select-Object -property Name,ResourceGroupName,?PowerState?
+#       Write-Output "PS Status:"
+#       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+#
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/azure-powershell-v5?view=azure-pipelines
+- task: AzurePowerShell@5
   inputs:
-    azureSubscription: ideArmoServiceConnection
-    # "Azure subscription 1"
-    scriptType: 'pscore'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      Write-Output "Status:"
-      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Where-Object name -EQ ideArmoVM1 | Select-Object -Property name,resourceGroup,powerState
-      Write-Output "Starting..."
-      az vm start --name "ideArmoVM1" --resource-group "ideArmoResourceGroup"
-      Write-Output "Status:"
-      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Where-Object name -EQ ideArmoVM1 | Select-Object -Property name,resourceGroup,powerState
+    ConnectedServiceNameARM: ideArmoServiceConnection
+    ScriptType: 'InlineScript'
+    Inline: |
       Write-Output "PS Status:"
       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+      # 2. stop (+deallocate) vm in Azure 
+      #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
       Write-Output "PS Stopping..."
       Stop-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force -Verbose
       #Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Verbose
+      # 3. monitor status of power state of vm (before and after power state change)
+      #               Get-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status
+      #                     Select-Object -property Name,ResourceGroupName,?PowerState?
       Write-Output "PS Status:"
       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
-#   1B: failover: by az command
-# 2. stop (+deallocate) vm in Azure 
-#               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
-# 3. monitor status of power state of vm (before and after power state change)
-#               Get-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status
-#                     Select-Object -property Name,ResourceGroupName,?PowerState?
