@@ -39,6 +39,7 @@ steps:
   inputs:
     ConnectedServiceNameARM: ideArmoServiceConnection
     ScriptType: 'InlineScript'
+    azurePowerShellVersion: LatestVersion
     Inline: |
       Write-Output "PS Status:"
       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
