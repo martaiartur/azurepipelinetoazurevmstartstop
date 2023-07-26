@@ -3,10 +3,6 @@ pool:
 
 steps:
 # - script: echo Hello, world! # 0. Run anything - this was run OK
-# plan: 1. run vm in Azure 
-#   1A: best: with Powershell because i like it
-#        powershell@azure pipeline still uses depreated AzureRM module instead of Az module, but commands should work similar way (tested at work)
-#               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
 # - task: AzureCLI@2
 #   inputs:
 #     ConnectedServiceNameARM: ideArmoServiceConnection
@@ -43,11 +39,18 @@ steps:
     Inline: |
       Write-Output "PS Status:"
       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+      # plan: 1. run vm in Azure 
+      #   1A: best: with Powershell because i like it
+      #        powershell@azure pipeline still uses depreated AzureRM module instead of Az module, but commands should work similar way (tested at work)
+      #               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
+      Write-Output "PS Starting..."
+      Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Verbose
+      Write-Output "PS Status:"
+      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
       # 2. stop (+deallocate) vm in Azure 
       #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
       Write-Output "PS Stopping..."
       Stop-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force -Verbose
-      #Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Verbose
       # 3. monitor status of power state of vm (before and after power state change)
       #               Get-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status
       #                     Select-Object -property Name,ResourceGroupName,?PowerState?
