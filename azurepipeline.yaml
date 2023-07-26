@@ -14,12 +14,15 @@ steps:
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Select-Object -Property name,resourceGroup,powerState
+      Write-Output "Status:"
+      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Where-Object name -EQ ideArmoVM1 | Select-Object -Property name,resourceGroup,powerState
+      Write-Output "Starting..."
       az vm start --name "ideArmoVM1" --resource-group "ideArmoResourceGroup"
-      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Select-Object -Property name,resourceGroup,powerState
-      # Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
-      # Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
-      # Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
+      Write-Output "Status:"
+      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Where-Object name -EQ ideArmoVM1 | Select-Object -Property name,resourceGroup,powerState
+      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+      Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
+      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
 #   1B: failover: by az command
 # 2. stop (+deallocate) vm in Azure 
 #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
