@@ -1,5 +1,9 @@
+pool: 
+  Default
+
 steps:
 - script: echo Hello, world!
+
 
 # plan: 1. run vm in Azure 
 #   1A: best: with Powershell because i like it
