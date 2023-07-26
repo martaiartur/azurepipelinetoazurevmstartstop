@@ -2,13 +2,20 @@ pool:
   Default
 
 steps:
-- script: echo Hello, world!
-
-
+# - script: echo Hello, world! # 0. Run anything - this was run OK
 # plan: 1. run vm in Azure 
 #   1A: best: with Powershell because i like it
 #        powershell@azure pipeline still uses depreated AzureRM module instead of Az module, but commands should work similar way (tested at work)
 #               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: ideArmoServiceConnection
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
+      Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
+      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
 #   1B: failover: by az command
 # 2. stop (+deallocate) vm in Azure 
 #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
