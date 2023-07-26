@@ -9,13 +9,16 @@ steps:
 #               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
 - task: AzureCLI@2
   inputs:
-    azureSubscription: ideArmoServiceConnection
+    azureSubscription: "Azure subscription 1"
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
-      Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
-      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
+      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Select-Object -Property name,resourceGroup,powerState
+      az vm start --name "ideArmoVM1" --resource-group "ideArmoResourceGroup"
+      az vm list --resource-group ideArmoResourceGroup --show-details | ConvertFrom-Json | Select-Object -Property name,resourceGroup,powerState
+      # Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
+      # Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
+      # Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -property *
 #   1B: failover: by az command
 # 2. stop (+deallocate) vm in Azure 
 #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
