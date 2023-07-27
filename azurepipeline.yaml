@@ -106,7 +106,7 @@ steps:
       $agentsURL = "https://dev.azure.com/" + $MyOrganization + "/_apis/distributedtask/pools/" + $Pool_id + "/agents?api-version=5.1"
       Write-Output ("##[debug] Invoke-WebRequest " + $agentsURL)
       #$agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
-      $agentsResponse = Invoke-WebRequest -URI $poolsURL -Headers $header
+      $agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers $header
       Write-Output "##[debug] Agents returns:"
       $agentsResponse.StatusCode
       $agentsResponse.StatusDescription
