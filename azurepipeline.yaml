@@ -1,5 +1,6 @@
 pool: 
-  Default
+  # Default
+  Azure Pipelines
 
 steps:
 # - script: echo Hello, world! # 0. Run anything - this was run OK
@@ -61,6 +62,7 @@ steps:
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/pipeline?view=azure-pipelines
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/pipeline?view=azure-pipelines#pipelinejobs
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/jobs?view=azure-pipelines
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/steps-pwsh?view=azure-pipelines
 - pwsh: |
     # To check if agent is up and running and contacting with Azure
     # https://github.com/MicrosoftDocs/azure-devops-docs/issues/3163
