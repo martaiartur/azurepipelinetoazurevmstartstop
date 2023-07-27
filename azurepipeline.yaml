@@ -89,8 +89,8 @@ steps:
     # $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
     $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers $header
     #Write-Output "##[debug] Pools returns:"
-    $poolsResponse.StatusCode
-    $poolsResponse.StatusDescription
+    #$poolsResponse.StatusCode
+    #$poolsResponse.StatusDescription
     #Write-Output "##[debug] Pools response content:"
     #$poolsResponse
     $pools = $poolsResponse.Content | ConvertFrom-Json
@@ -113,7 +113,7 @@ steps:
       $contentFromJson = $agentsResponse.Content | ConvertFrom-Json
       #Write-Output "##[debug] Agents content form JSON:"
       #$contentFromJson
-      #$agents = $agentsResponse.Content | ConvertFrom-Json | Select-Object -ExpandProperty value
+      $agents = $agentsResponse.Content | ConvertFrom-Json | Select-Object -ExpandProperty value
       #Write-Output "##[debug] Agents (short):"
       $agents | Select-Object -Property @{n='Pool';e={$Pool.name}},name,id
       #Write-Output "##[debug] Agents (full):"
