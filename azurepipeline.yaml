@@ -78,46 +78,46 @@ steps:
     $poolsURL = "https://dev.azure.com/" + $MyOrganization + "/_apis/distributedtask/pools?api-version=5.1"
     # https://www.opentechguides.com/how-to/article/azure/201/devops-rest-powershell.html
     $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":" + $Env:DevOpsTokenToThisProject))
-    Write-Output ("##[debug] `$DevOpsTokenToThisProject(0-52)= " + $Env:DevOpsTokenToThisProject.Substring(0, 52))
-    Write-Output ("##[debug] `$token = " + $token)
+    #Write-Output ("##[debug] `$DevOpsTokenToThisProject(0-52)= " + $Env:DevOpsTokenToThisProject.Substring(0, 52))
+    #Write-Output ("##[debug] `$token = " + $token)
     $header = @{authorization = "Basic $token"}
     # manual set of first URL
     #$poolsURL = https://dev.azure.com/DevOps-Corp/_apis/distributedtask/pools?api-version=5.1
-    Write-Output ("##[debug] Invoke-WebRequest " + $poolsURL)
+    #Write-Output ("##[debug] Invoke-WebRequest " + $poolsURL)
     # https://blog.bartekr.net/2020/09/24/using-the-system-oauth-token-in-azure-devops/
     # https://dev.azure.com/DevOps-Corp/_usersSettings/tokens => These can be used instead of a password for applications like Git or can be passed in the authorization header to access REST APIs
     # $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
     $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers $header
-    Write-Output "##[debug] Pools returns:"
+    #Write-Output "##[debug] Pools returns:"
     $poolsResponse.StatusCode
     $poolsResponse.StatusDescription
-    Write-Output "##[debug] Pools response content:"
-    $poolsResponse
+    #Write-Output "##[debug] Pools response content:"
+    #$poolsResponse
     $pools = $poolsResponse.Content | ConvertFrom-Json
-    Write-Output "##[debug] Pools Content:"
-    $pools
-    $pools.value | Select-Object -Property name,id
-    $Pool_id = $pools.value | Where-Object name -EQ "SP-AgentServers-DEV" | Select-Object -ExpandProperty id
+    #Write-Output "##[debug] Pools Content:"
+    #$pools
+    #$pools.value | Select-Object -Property name,id
+    #$Pool_id = $pools.value | Where-Object name -EQ "SP-AgentServers-DEV" | Select-Object -ExpandProperty id
     # manual insertion to test agents list
     foreach( $Pool in $pools.value ){
       $Pool_id = $Pool.id
       #$Pool_id = "132"
-      Write-Output ("##[debug] `$Pool_id = " + $Pool_id)
+      #Write-Output ("##[debug] `$Pool_id = " + $Pool_id)
       $agentsURL = "https://dev.azure.com/" + $MyOrganization + "/_apis/distributedtask/pools/" + $Pool_id + "/agents?api-version=5.1"
-      Write-Output ("##[debug] Invoke-WebRequest " + $agentsURL)
+      #Write-Output ("##[debug] Invoke-WebRequest " + $agentsURL)
       #$agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
       $agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers $header
-      Write-Output "##[debug] Agents returns:"
-      $agentsResponse.StatusCode
-      $agentsResponse.StatusDescription
+      #Write-Output "##[debug] Agents returns:"
+      #$agentsResponse.StatusCode
+      #$agentsResponse.StatusDescription
       $contentFromJson = $agentsResponse.Content | ConvertFrom-Json
-      Write-Output "##[debug] Agents content form JSON:"
-      $contentFromJson
-      $agents = $agentsResponse.Content | ConvertFrom-Json | Select-Object -ExpandProperty value
-      Write-Output "##[debug] Agents (short):"
-      $agents | Select-Object -Property name,id
-      Write-Output "##[debug] Agents (full):"
-      $agents
+      #Write-Output "##[debug] Agents content form JSON:"
+      #$contentFromJson
+      #$agents = $agentsResponse.Content | ConvertFrom-Json | Select-Object -ExpandProperty value
+      #Write-Output "##[debug] Agents (short):"
+      $agents | Select-Object -Property @{n='Pool';e={$Pool.name}},name,id
+      #Write-Output "##[debug] Agents (full):"
+      #$agents
     }
     #Write-Output "##[debug] ParsedHtml:"
     #$pools.ParsedHtml
