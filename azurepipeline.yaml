@@ -75,13 +75,17 @@ steps:
     # https://stackoverflow.com/questions/60517637/howto-escape-var-in-azure-devops-yaml
     #$MyOrganization = "DevOps-Corp"
     $MyOrganization = "idearmoOrg"
-    $poolsURL = https://dev.azure.com/ + $MyOrganization + "/_apis/distributedtask/pools?api-version=5.1"
+    $poolsURL = "https://dev.azure.com/" + $MyOrganization + "/_apis/distributedtask/pools?api-version=5.1"
+    # https://www.opentechguides.com/how-to/article/azure/201/devops-rest-powershell.html
+    $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":" + $DevOpsTokenToThisProject))
+    $header = @{authorization = "Basic $token"}
     # manual set of first URL
-    $poolsURL = https://dev.azure.com/DevOps-Corp/_apis/distributedtask/pools?api-version=5.1
+    #$poolsURL = https://dev.azure.com/DevOps-Corp/_apis/distributedtask/pools?api-version=5.1
     Write-Output ("##[debug] Invoke-WebRequest " + $poolsURL)
     # https://blog.bartekr.net/2020/09/24/using-the-system-oauth-token-in-azure-devops/
     # https://dev.azure.com/DevOps-Corp/_usersSettings/tokens => These can be used instead of a password for applications like Git or can be passed in the authorization header to access REST APIs
-    $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+    # $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+    $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers $header
     Write-Output "##[debug] Pools returns:"
     $poolsResponse.StatusCode
     $poolsResponse.StatusDescription
@@ -97,7 +101,8 @@ steps:
     Write-Output ("##[debug] `$Pool_id = " + $Pool_id)
     $agentsURL = https://dev.azure.com/ + $MyOrganization + "/_apis/distributedtask/pools/" + $Pool_id + "/agents?api-version=5.1"
     Write-Output ("##[debug] Invoke-WebRequest " + $agentsURL)
-    $agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+    #$agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+    $agentsResponse = Invoke-WebRequest -URI $poolsURL -Headers $header
     Write-Output "##[debug] Agents returns:"
     $agentsResponse.StatusCode
     $agentsResponse.StatusDescription
