@@ -31,28 +31,120 @@ steps:
 #       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
 #
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/azure-powershell-v5?view=azure-pipelines
-- task: AzurePowerShell@5
-  inputs:
-    ConnectedServiceNameARM: ideArmoServiceConnection
-    ScriptType: 'InlineScript'
-    azurePowerShellVersion: LatestVersion
-    Inline: |
-      Write-Output "##[section] PS Status:"
-      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
-      # plan: 1. run vm in Azure 
-      #   1A: best: with Powershell because i like it
-      #        powershell@azure pipeline still uses depreated AzureRM module instead of Az module, but commands should work similar way (tested at work)
-      #               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
-      Write-Output "##[section] PS Starting..."
-      Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Verbose *>&1
-      Write-Output "##[section] PS Status:"
-      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
-      # 2. stop (+deallocate) vm in Azure 
-      #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
-      Write-Output "##[section] PS Stopping..."
-      Stop-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force -Verbose *>&1
-      # 3. monitor status of power state of vm (before and after power state change)
-      #               Get-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status
-      #                     Select-Object -property Name,ResourceGroupName,?PowerState?
-      Write-Output "##[section] PS Status:"
-      Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+# - task: AzurePowerShell@5
+#   inputs:
+#     ConnectedServiceNameARM: ideArmoServiceConnection
+#     ScriptType: 'InlineScript'
+#     azurePowerShellVersion: LatestVersion
+#     Inline: |
+#       Write-Output "##[section] PS Status:"
+#       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+#       # plan: 1. run vm in Azure 
+#       #   1A: best: with Powershell because i like it
+#       #        powershell@azure pipeline still uses depreated AzureRM module instead of Az module, but commands should work similar way (tested at work)
+#       #               Start-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup"
+#       Write-Output "##[section] PS Starting..."
+#       Start-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Verbose *>&1
+#       Write-Output "##[section] PS Status:"
+#       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+#       # 2. stop (+deallocate) vm in Azure 
+#       #               Stop-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force
+#       Write-Output "##[section] PS Stopping..."
+#       Stop-AzVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -StayProvisioned:$false -Force -Verbose *>&1
+#       # 3. monitor status of power state of vm (before and after power state change)
+#       #               Get-AzureRmVM -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status
+#       #                     Select-Object -property Name,ResourceGroupName,?PowerState?
+#       Write-Output "##[section] PS Status:"
+#       Get-AzVM   -Name "ideArmoVM1" -ResourceGroupName "ideArmoResourceGroup" -Status | Select-Object -Property Name,ResourceGroupName,@{n='PowerState';e={$_.Statuses | Where-Object Code -ILike "PowerState*" | Select-Object -ExpandProperty DisplayStatus}}
+
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/?view=azure-pipelines
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/pipeline?view=azure-pipelines
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/pipeline?view=azure-pipelines#pipelinejobs
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/jobs?view=azure-pipelines
+- pwsh: |
+    # To check if agent is up and running and contacting with Azure
+    # https://github.com/MicrosoftDocs/azure-devops-docs/issues/3163
+    # https://www.google.com/search?q=azure+pipeline+query+if+agent+is+online
+    #
+    # try to use steps template not full stages template - just  to train different devops methods
+    # https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/?view=azure-pipelines
+    # https://learn.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=azure-devops&pivots=templates-includes#step-reuse
+    #
+    # https://stackoverflow.com/questions/60517637/howto-escape-var-in-azure-devops-yaml
+    #$MyOrganization = "DevOps-Corp"
+    $MyOrganization = "idearmoOrg"
+    $poolsURL = https://dev.azure.com/ + $MyOrganization + "/_apis/distributedtask/pools?api-version=5.1"
+    # manual set of first URL
+    $poolsURL = https://dev.azure.com/DevOps-Corp/_apis/distributedtask/pools?api-version=5.1
+    Write-Output ("##[debug] Invoke-WebRequest " + $poolsURL)
+    # https://blog.bartekr.net/2020/09/24/using-the-system-oauth-token-in-azure-devops/
+    # https://dev.azure.com/DevOps-Corp/_usersSettings/tokens => These can be used instead of a password for applications like Git or can be passed in the authorization header to access REST APIs
+    $poolsResponse = Invoke-WebRequest -URI $poolsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+    Write-Output "##[debug] Pools returns:"
+    $poolsResponse.StatusCode
+    $poolsResponse.StatusDescription
+    Write-Output "##[debug] Pools response content:"
+    $poolsResponse
+    $pools = $poolsResponse.Content | ConvertFrom-Json
+    Write-Output "##[debug] Pools Content:"
+    $pools
+    $pools.value | Select-Object -Property name,id
+    $Pool_id = $pools.value | Where-Object name -EQ "SP-AgentServers-DEV" | Select-Object -ExpandProperty id
+    # manual insertion to test agents list
+    #$Pool_id = "132"
+    Write-Output ("##[debug] `$Pool_id = " + $Pool_id)
+    $agentsURL = https://dev.azure.com/ + $MyOrganization + "/_apis/distributedtask/pools/" + $Pool_id + "/agents?api-version=5.1"
+    Write-Output ("##[debug] Invoke-WebRequest " + $agentsURL)
+    $agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+    Write-Output "##[debug] Agents returns:"
+    $agentsResponse.StatusCode
+    $agentsResponse.StatusDescription
+    $contentFromJson = $agentsResponse.Content | ConvertFrom-Json
+    Write-Output "##[debug] Agents content form JSON:"
+    $contentFromJson
+    $agents = $agentsResponse.Content | ConvertFrom-Json | Select-Object -ExpandProperty value
+    Write-Output "##[debug] Agents (short):"
+    $agents | Select-Object -Property name,id
+    Write-Output "##[debug] Agents (full):"
+    $agents
+    #Write-Output "##[debug] ParsedHtml:"
+    #$pools.ParsedHtml
+    #
+    # $agents = https://dev.azure.com/$($MyOrganization)/_apis/distributedtask/pools/{replacepoolid}/agents?api-version=5.1
+    # $agent = https://dev.azure.com/$($MyOrganization)/_apis/distributedtask/pools/{replacepoolid}/agents?agentid={replace agentid}&api-version=5.1
+    #
+    # https://dev.azure.com/$($MyOrganization)/_apis/distributedtask/pools/{replacepoolid}/agents?api-version=5.1
+    # https://dev.azure.com/DevOps-Corp/_apis/distributedtask/pools?api-version=5.1
+    # PS C:\Users\amm19586> $ContentJson.value | Select-Object -Property name,id
+    #
+    # name                             id
+    # ----                             --
+    # Default                           1
+    # Hosted                            2
+    # Hosted VS2017                     3
+    # Hosted Windows Container          4
+    # Hosted macOS                      5
+    # Hosted Ubuntu 1604                6
+    # Hosted Windows 2019 with VS2019   7
+    # Hosted macOS High Sierra          9
+    # Azure Pipelines                  10
+    # AIM-AgentServers                 61
+    # SP-AgentServers-DEV             132
+    # SP-AgentServers-DEV2            134
+    # SP-AgentServers-UAT             135
+    # SP-AgentServers-PRD             136
+    # SP-AgentServers-DEMO            137
+    # CSMT-servers                    138
+    #
+    # https://dev.azure.com/$($MyOrganization)/_apis/distributedtask/pools/{replacepoolid}/agents?api-version=5.1
+    # https://dev.azure.com/DevOps-Corp/_apis/distributedtask/pools/132/agents?api-version=5.1
+    # PS C:\Users\amm19586> $ContentJson.value | Select-Object -Property name,status
+    #
+    # name         status
+    # ----         ------
+    # us1salx08317 online
+    # us1salx08316 online
+  name: GetStatusOfPoolAgents
+  displayName: Get status of pool agents
+  env:
+    DevOpsTokenToThisProject: $(DevOpsTokenToThisProject)
