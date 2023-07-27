@@ -99,26 +99,29 @@ steps:
     #$pools.value | Select-Object -Property name,id
     #$Pool_id = $pools.value | Where-Object name -EQ "SP-AgentServers-DEV" | Select-Object -ExpandProperty id
     # manual insertion to test agents list
-    foreach( $Pool in $pools.value ){
-      $Pool_id = $Pool.id
-      #$Pool_id = "132"
-      #Write-Output ("##[debug] `$Pool_id = " + $Pool_id)
-      $agentsURL = "https://dev.azure.com/" + $MyOrganization + "/_apis/distributedtask/pools/" + $Pool_id + "/agents?api-version=5.1"
-      #Write-Output ("##[debug] Invoke-WebRequest " + $agentsURL)
-      #$agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
-      $agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers $header
-      #Write-Output "##[debug] Agents returns:"
-      #$agentsResponse.StatusCode
-      #$agentsResponse.StatusDescription
-      $contentFromJson = $agentsResponse.Content | ConvertFrom-Json
-      #Write-Output "##[debug] Agents content form JSON:"
-      #$contentFromJson
-      $agents = $agentsResponse.Content | ConvertFrom-Json | Select-Object -ExpandProperty value
-      #Write-Output "##[debug] Agents (short):"
-      $agents | Select-Object -Property @{n='Pool';e={$Pool.name}},name,id
-      #Write-Output "##[debug] Agents (full):"
-      #$agents
+    $AgentStats = . {
+      foreach( $Pool in $pools.value ){
+        $Pool_id = $Pool.id
+        #$Pool_id = "132"
+        #Write-Output ("##[debug] `$Pool_id = " + $Pool_id)
+        $agentsURL = "https://dev.azure.com/" + $MyOrganization + "/_apis/distributedtask/pools/" + $Pool_id + "/agents?api-version=5.1"
+        #Write-Output ("##[debug] Invoke-WebRequest " + $agentsURL)
+        #$agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+        $agentsResponse = Invoke-WebRequest -URI $agentsURL -Headers $header
+        #Write-Output "##[debug] Agents returns:"
+        #$agentsResponse.StatusCode
+        #$agentsResponse.StatusDescription
+        $contentFromJson = $agentsResponse.Content | ConvertFrom-Json
+        #Write-Output "##[debug] Agents content form JSON:"
+        #$contentFromJson
+        $agents = $agentsResponse.Content | ConvertFrom-Json | Select-Object -ExpandProperty value
+        #Write-Output "##[debug] Agents (short):"
+        $agents | Select-Object -Property @{n='Pool';e={$Pool.name}},name,status,enabled
+        #Write-Output "##[debug] Agents (full):"
+        #$agents
+      }
     }
+    $AgentStats = Format-Table -AutoSize
     #Write-Output "##[debug] ParsedHtml:"
     #$pools.ParsedHtml
     #
