@@ -78,6 +78,8 @@ steps:
     $poolsURL = "https://dev.azure.com/" + $MyOrganization + "/_apis/distributedtask/pools?api-version=5.1"
     # https://www.opentechguides.com/how-to/article/azure/201/devops-rest-powershell.html
     $token = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":" + $DevOpsTokenToThisProject))
+    Write-Output ("##[debug] `$DevOpsTokenToThisProject(0-52)= " + $DevOpsTokenToThisProject.Substring(0, 52))
+    Write-Output ("##[debug] `$token = " + $token)
     $header = @{authorization = "Basic $token"}
     # manual set of first URL
     #$poolsURL = https://dev.azure.com/DevOps-Corp/_apis/distributedtask/pools?api-version=5.1
