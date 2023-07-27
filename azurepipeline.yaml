@@ -121,7 +121,7 @@ steps:
         #$agents
       }
     }
-    $AgentStats = Format-Table -AutoSize
+    $AgentStats | Format-Table -AutoSize
     #Write-Output "##[debug] ParsedHtml:"
     #$pools.ParsedHtml
     #
